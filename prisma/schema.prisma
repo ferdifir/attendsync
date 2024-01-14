@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id          Int                @id @default(autoincrement())
+  name             String
+  email            String             @unique
+  username         String             @unique
+  password         String
+  role             String
+  token            String?
+  responses        UserResponse[]
+  AttendanceReport AttendanceReport[]
+}
+
+model Question {
+  question_id   Int              @id @default(autoincrement())
+  question_code String
+  question_text String
+  responses     UserResponse[]
+  reports       QuestionReport[]
+}
+
+model Video {
+  video_id    Int    @id @default(autoincrement())
+  title       String
+  description String
+  video_url   String
+}
+
+model UserResponse {
+  response_id     Int      @id @default(autoincrement())
+  user_id         Int
+  question_id     Int
+  answer          String
+  photo_url       String?
+  submission_time DateTime @default(now())
+  user            User     @relation(fields: [user_id], references: [user_id])
+  question        Question @relation(fields: [question_id], references: [question_id])
+}
+
+model QuestionReport {
+  report_id   Int      @id @default(autoincrement())
+  question_id Int
+  report_time DateTime @default(now())
+  question    Question @relation(fields: [question_id], references: [question_id])
+}
+
+model AttendanceReport {
+  report_id       Int      @id @default(autoincrement())
+  user_id         Int
+  location        String
+  attendance_date DateTime
+  report_time     DateTime @default(now())
+  user            User     @relation(fields: [user_id], references: [user_id])
+}
