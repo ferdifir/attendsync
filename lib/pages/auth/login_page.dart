@@ -1,5 +1,9 @@
+import 'package:attendsync/common/api.dart';
+import 'package:attendsync/common/helper.dart';
 import 'package:attendsync/pages/admin/home_admin_page.dart';
-import 'package:attendsync/pages/user/home_user_page.dart';
+import 'package:attendsync/services/api/api_service.dart';
+import 'package:attendsync/services/api/http_client.dart';
+import 'package:attendsync/services/hive/hive_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,6 +15,12 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool obsecurePassword = true;
+  TextEditingController emailController = TextEditingController(
+    text: 'fred',
+  );
+  TextEditingController passwordController = TextEditingController(
+    text: '1q2w3e4r',
+  );
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +46,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(height: 90),
           TextFormField(
+            controller: emailController,
             decoration: InputDecoration(
               label: const Text('Username'),
               prefixIcon: const Icon(Icons.person_sharp),
@@ -46,6 +57,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
           const SizedBox(height: 20),
           TextFormField(
+            controller: passwordController,
             obscureText: obsecurePassword,
             decoration: InputDecoration(
               label: const Text('Password'),
@@ -68,40 +80,24 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 30),
           ElevatedButton(
             onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Role'),
-                    content: const Text('Pilih role anda'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomeAdminPage(),
-                            ),
-                          );
-                        },
-                        child: const Text('Admin'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HomeUserPage(),
-                            ),
-                          );
-                        },
-                        child: const Text('User'),
-                      ),
-
-                    ],
+              Helper.showLoading(context);
+              doLogin().then((value) {
+                Navigator.pop(context);
+                if (value) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeAdminPage(),
+                    ),
                   );
-                },
-              );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Login gagal'),
+                    ),
+                  );
+                }
+              });
             },
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
@@ -114,5 +110,30 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
     );
+  }
+
+  Future<bool> doLogin() async {
+    final httpClient = HttpClient();
+    final apiService = ApiService(httpClient);
+    try {
+      final result = await apiService.login(
+        Api.LOGIN,
+        {
+          'username': emailController.text,
+          'password': passwordController.text,
+        },
+      );
+      print(result);
+      if (result['status'] == 'success') {
+        HiveService.saveUserToken(result['data']['token']);
+        HiveService.saveUserRole(result['data']['role']);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 }

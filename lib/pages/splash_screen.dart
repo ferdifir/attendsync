@@ -1,4 +1,5 @@
 import 'package:attendsync/routes/app_routes.dart';
+import 'package:attendsync/services/hive/hive_service.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,8 +13,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
+    bool isUserLoggedIn = HiveService.isUserLoggedIn();
+    String routeName = isUserLoggedIn ? AppRoutes.HOME : AppRoutes.LOGIN;
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, AppRoutes.LOGIN);
+      Navigator.pushReplacementNamed(context, routeName);
     });
     super.initState();
   }

@@ -13,15 +13,7 @@ class UserPage extends StatelessWidget {
             ),
         centerTitle: true,
         backgroundColor: Colors.blue,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-          ),
-        ),
+        leading: Container(),
       ),
       body: ListView(
         padding: const EdgeInsets.only(
